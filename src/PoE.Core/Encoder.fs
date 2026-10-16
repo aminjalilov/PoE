@@ -66,8 +66,10 @@ let ppBool builder (bv: BitVector) =
   if bv.[0] then append builder ("true")
   else append builder "false"
 
-let ppBitVectorAsBinaryString _builder _bv =
-  failwith "implement"
+let ppBitVectorAsBinaryString builder (bv: BitVector) =
+  for i = 0 to bv.Length - 1 do
+    append builder (if bv.[i] then "1" else "0")
+  append builder "bs"
 
 let ppBitVector builder (bv: BitVector) =
   if bv.Length = 0 then append builder "\"\""
