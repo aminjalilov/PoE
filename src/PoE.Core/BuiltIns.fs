@@ -136,6 +136,7 @@ type Atoi () =
   override __.Name with get() = "atoi"
   override __.ReturnType with get() = TypeAnyInt
   override __.ParamTypes with get() = [ TypeAnyBV; TypeAnyInt ]
+  override __.MinParamCount with get() = 1
   override __.Execute state args annot =
     match args with
     | BitVecValue bv :: IntValue (basenum, _) :: _ ->
@@ -153,6 +154,7 @@ type Itoa () =
   override __.Name with get() = "itoa"
   override __.ReturnType with get() = TypeAnyBV
   override __.ParamTypes with get() = [ TypeAnyInt; TypeAnyInt ]
+  override __.MinParamCount with get() = 1
   override __.Execute state args annot =
     match args with
     | IntValue (v, _) :: IntValue (10L, _) :: _ ->
@@ -392,3 +394,15 @@ module BuiltIns =
        LibcStrAddr () :> BuiltInFunc
        Pause () :> BuiltInFunc
        Pid  () :> BuiltInFunc |]
+
+  let checkArity onError name maxCount actualCount =
+    let minCount =
+      functions
+      |> Array.tryFind (fun fn -> fn.Name = name)
+      |> Option.map (fun fn -> fn.MinParamCount)
+      |> Option.defaultValue maxCount
+    if actualCount < minCount || actualCount > maxCount then
+      let expected =
+        if minCount = maxCount then string maxCount
+        else $"{minCount} to {maxCount}"
+      onError $"Function `{name}' expects {expected} argument(s), got {actualCount}."

@@ -512,7 +512,13 @@ and callAndReturn state argnames argvals body annot =
 
 and evalCall state fname argvals annot =
   let oldVars = state.VarMap
-  match findFunction state fname annot with
+  let fn = findFunction state fname annot
+  let count =
+    match fn with
+    | RegularFunction (_, args, _) | ActionFunction (_, args, _) -> List.length args
+    | BuiltinFunction (_, fn) -> List.length fn.ParamTypes
+  BuiltIns.checkArity (err annot) fname count (List.length argvals)
+  match fn with
   | ActionFunction (_, argnames, body) ->
     if EvalUtils.isAct state then err annot "Nested acts are not supported."
     else
