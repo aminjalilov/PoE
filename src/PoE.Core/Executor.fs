@@ -138,6 +138,10 @@ let isFalse v = isEqual v falseValue
 
 let isBoolean v = isTrue v || isFalse v
 
+let private conditionValue annot = function
+  | BitVecValue bv when bv.Count = 1 -> bv.[0]
+  | _ -> err annot "Condition must be a one-bit bitvector."
+
 let eq lhs rhs = if isEqual lhs rhs then trueValue else falseValue
 
 let neq lhs rhs = if isEqual lhs rhs then falseValue else trueValue
@@ -485,11 +489,8 @@ and evalBVMult state v multiplier annot =
 
 and evalIte state cond texp fexp annot =
   let state, cond = evalExpr state cond annot
-  match cond with
-  | BitVecValue _ ->
-    if isEqual trueValue cond then evalExpr state texp annot
-    else evalExpr state fexp annot
-  | _ -> err annot "Invalid condition for ite."
+  if conditionValue annot cond then evalExpr state texp annot
+  else evalExpr state fexp annot
 
 and updateFuncArg annot state vardef value =
   let state, v = evalExpr state value annot
@@ -603,15 +604,16 @@ and evalForLoop state loopvar fini body annot =
   else state
 
 and evalWhileLoop state condExpr body annot =
-  let state, cond = evalExpr state condExpr annot
   if state.IsReturning then state
-  elif isEqual cond trueValue && not state.IsBreaking then
-    let state' = evalProgram { state with Program = body; ProgCounter = 0 }
-    evalWhileLoop state' condExpr body annot
   elif state.IsBreaking then
     { state with IsBreaking = false }
   else
-    state
+    let state, cond = evalExpr state condExpr annot
+    if conditionValue annot cond then
+      let state' = evalProgram { state with Program = body; ProgCounter = 0 }
+      evalWhileLoop state' condExpr body annot
+    else
+      state
 
 and pushVarIntoScope state v init =
   match Map.tryFind v state.VarMap with
@@ -689,7 +691,7 @@ and evalStmtRegular state = function
       let state = evalProgram { state with Program = body; ProgCounter = 0 }
       if isEscaping state then state
       else incPC { state with Program = oldprog; ProgCounter = oldpc }
-    if isEqual cond trueValue then evalBody tbody
+    if conditionValue annot cond then evalBody tbody
     elif not (List.isEmpty fbody) then evalBody fbody
     else incPC state
   | BreakStmt (_) -> { state with ProgCounter = -1; IsBreaking = true }
