@@ -151,7 +151,7 @@ let rec toZ3 map ({ Z3Ctxt = z3 } as ctxt) annot = function
     let eoff = getIntVal map eoff
     z3.MkExtract (eoff, soff, toZ3 map ctxt annot e)
   | Concat (l, r, _) ->
-    z3.MkConcat (toZ3 map ctxt annot l, toZ3 map ctxt annot r)
+    z3.MkConcat (toZ3 map ctxt annot r, toZ3 map ctxt annot l)
   | Ite (cond, texp, fexp, _) ->
     let cond = boolToZ3 map ctxt cond
     let t = toZ3 map ctxt annot texp
