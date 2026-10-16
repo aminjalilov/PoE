@@ -125,6 +125,14 @@ type WriteAfter () =
 
 type Atoi () =
   inherit BuiltInFunc ()
+
+  let inferType (n: int64) =
+    if n < 0L then TypeInt64 // Keep negative values unmasked through arithmetic.
+    elif n <= int64 SByte.MaxValue then TypeInt8
+    elif n <= int64 Int16.MaxValue then TypeInt16
+    elif n <= int64 Int32.MaxValue then TypeInt32
+    else TypeInt64
+
   override __.Name with get() = "atoi"
   override __.ReturnType with get() = TypeAnyInt
   override __.ParamTypes with get() = [ TypeAnyBV; TypeAnyInt ]
@@ -133,11 +141,11 @@ type Atoi () =
     | BitVecValue bv :: IntValue (basenum, _) :: _ ->
       let s = bvToBytes bv |> bytesToStr
       let n = Convert.ToInt64 (s.Trim(), int basenum)
-      state, IntValue (n, ExprType.ofInt64 n)
+      state, IntValue (n, inferType n)
     | BitVecValue bv :: [] ->
       let s = bvToBytes bv |> bytesToStr
       let n = Convert.ToInt64 (s.Trim(), 10)
-      state, IntValue (n, ExprType.ofInt64 n)
+      state, IntValue (n, inferType n)
     | _ -> err annot "Invalid parameter for atoi."
 
 type Itoa () =
