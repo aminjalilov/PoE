@@ -77,6 +77,16 @@ let ppBitVector builder (bv: BitVector) =
   elif bv.Length = 1 then ppBool builder bv
   else ppBitVectorAsBinaryString builder bv
 
+let private escapeStringByte = function
+  | 0x22uy -> "\\\""
+  | 0x5cuy -> "\\\\"
+  | 0x08uy -> "\\b"
+  | 0x0auy -> "\\n"
+  | 0x0duy -> "\\r"
+  | 0x09uy -> "\\t"
+  | b when b >= 0x20uy && b <= 0x7euy -> string (char b)
+  | b -> "\\x" + b.ToString ("x2")
+
 let rec ppExpr builder = function
   | Var (name, _) -> append builder name
   | BitVector (bv, _) -> ppBitVector builder bv
@@ -152,8 +162,7 @@ and ppBVMult builder v multiplier =
   match v with
   | BitVector (bv, _) ->
     BitVectorUtils.bvToBytes bv
-    |> StringUtils.bytesToStr
-    |> append builder
+    |> Array.iter (escapeStringByte >> append builder)
   | _ -> raise (EncodingException "Invalid BVMult expr.")
   append builder "\"x("
   ppExpr builder multiplier
@@ -294,7 +303,11 @@ let rec ppStmt builder indent = function
     append builder "solve "
     ppExpr builder e
     append builder Environment.NewLine
-  | DebugStmt (_, _, _) -> ()
+  | DebugStmt (e, fmt, _) ->
+    ppIndent builder indent
+    append builder (match fmt with OutHex -> "dbghex " | OutAscii -> "dbgascii ")
+    ppExpr builder e
+    append builder Environment.NewLine
 
 and ppStmts builder indent = function
   | stmt :: rest ->
