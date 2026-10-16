@@ -229,7 +229,7 @@ type Le2be () =
 
 type Be2le () =
   inherit Le2be ()
-  override __.Name with get() = "le2be"
+  override __.Name with get() = "be2le"
 
 /// Network text presentation (P) to numeric (N). Similar to inet_pton.
 type P2n () =
