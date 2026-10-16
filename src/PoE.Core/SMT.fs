@@ -197,7 +197,7 @@ let evalConstDecl (m: Microsoft.Z3.Model) state (f: Microsoft.Z3.FuncDecl) =
     match findVar state symName None with
     | UnknownValue t ->
       if ExprType.isIntType t then
-        let n = adjustIntByType n.Int64 t None
+        let n = adjustIntByType (int64 n.UInt64) t None
         addVar state symName (IntValue (n, t))
       else
         let bv = n.BigInteger.ToByteArray () |> BitVectorUtils.bytesToBV
