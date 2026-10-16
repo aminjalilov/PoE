@@ -54,11 +54,8 @@ let getZ3ExprFromVar map ctxt name =
     e
 
 let isSignedOp ltyp rtyp =
-  match ltyp, rtyp with
-  | TypeInt8, TypeInt8
-  | TypeInt16, TypeInt16
-  | TypeInt32, TypeInt32
-  | TypeInt64, TypeInt64 -> true
+  match TypeChecker.meetType None ltyp rtyp with
+  | TypeInt8 | TypeInt16 | TypeInt32 | TypeInt64 | TypeAnyInt -> true
   | _ -> false
 
 let rec getType map = function
@@ -66,7 +63,7 @@ let rec getType map = function
     match Map.find name map with
     | IntValue (_, t) -> t
     | BitVecValue bv -> TypeBV bv.Count
-    | UnknownValue _ -> TypeAny
+    | UnknownValue t -> t
   | BitVector (bv, _) -> TypeBV bv.Count
   | Int (_, t, _) -> t
   | Unit -> TypeAny
