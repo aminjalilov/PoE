@@ -282,8 +282,8 @@ module TypeChecker =
       let ityp = computeExprType env init
       let ftyp = computeExprType env fini
       assertTypeConsistency annot ityp ftyp
-      env.AddSymbolType vname ityp annot
       env.EnterScope ()
+      env.AddSymbolType vname ityp annot
       checkBlock env name body
       env.ExitScope ()
       checkBlock env name next
