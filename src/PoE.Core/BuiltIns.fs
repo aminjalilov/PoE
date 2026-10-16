@@ -268,10 +268,11 @@ type Replace () =
       if soff >= 0 && eoff = -1 && dst.Length > soff then
         state,
         BitVecValue (replaceBV dst soff (dst.Length - soff) src)
-      elif soff < 0 && eoff < 0 && soff < eoff then
+      elif soff < 0 && eoff < 0 && soff <= eoff then
+        let count = eoff - soff + 1
         let soff = dst.Length + soff
         state,
-        BitVecValue (replaceBV dst soff (soff + eoff + 1) src)
+        BitVecValue (replaceBV dst soff count src)
       else
         state,
         BitVecValue (replaceBV dst soff (eoff - soff + 1) src)
